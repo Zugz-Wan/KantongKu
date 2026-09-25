@@ -40,4 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma generated client
 /app/generated/prisma
+
+# local mock storage
+.mock_users.json

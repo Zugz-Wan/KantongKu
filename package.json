@@ -1,0 +1,11 @@
+{
+  "name": "kantongku-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix kantongku run dev",
+    "build": "npm --prefix kantongku run build",
+    "start": "npm --prefix kantongku run start",
+    "lint": "npm --prefix kantongku run lint"
+  }
+}
