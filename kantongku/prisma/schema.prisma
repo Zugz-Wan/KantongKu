@@ -1,12 +1,11 @@
 // Prisma Schema untuk KantongKu
-// File ini disiapkan sebagai deliverable teknis skema tabel Users
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" // Bisa disesuaikan dengan MySQL / PostgreSQL / SQLite
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
