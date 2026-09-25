@@ -1,25 +1,18 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+const prismaClientSingleton = () => {
+  const connectionString = process.env.DATABASE_URL;
+  const adapter = new PrismaPg({ connectionString });
+  return new PrismaClient({ adapter });
 };
 
-/**
- * Mengembalikan instance PrismaClient jika DATABASE_URL terkonfigurasi.
- * Mengembalikan null jika belum ada koneksi database.
- */
-export function getPrismaClient(): PrismaClient | null {
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.trim().length === 0) {
-    return null;
-  }
+declare const globalThis: {
+  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
+} & typeof global;
 
-  try {
-    if (!globalForPrisma.prisma) {
-      globalForPrisma.prisma = new PrismaClient();
-    }
-    return globalForPrisma.prisma;
-  } catch (err) {
-    console.warn('Gagal menginisialisasi PrismaClient:', err);
-    return null;
-  }
-}
+const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+
+export default prisma;
+
+if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma;
