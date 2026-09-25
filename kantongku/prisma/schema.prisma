@@ -1,0 +1,21 @@
+// Prisma Schema untuk KantongKu
+// File ini disiapkan sebagai deliverable teknis skema tabel Users
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Bisa disesuaikan dengan MySQL / PostgreSQL / SQLite
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String   // Password yang telah di-hash dengan bcrypt/argon2
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
