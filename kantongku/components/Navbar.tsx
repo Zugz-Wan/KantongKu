@@ -50,6 +50,12 @@ export async function Navbar({ userName }: NavbarProps) {
               Riwayat Transaksi
             </Link>
             <Link
+              href="/budget"
+              className="rounded-lg px-3.5 py-2 text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+            >
+              Anggaran Bulanan
+            </Link>
+            <Link
               href="/transactions/new"
               className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-950/60 px-3.5 py-2 text-xs font-bold text-[#00df82] hover:bg-emerald-900/60 transition-colors"
             >

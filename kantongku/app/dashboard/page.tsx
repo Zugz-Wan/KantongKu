@@ -1,5 +1,4 @@
 import Link from "next/link";
-import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { TransactionList } from "@/components/TransactionList";
 import { calculateBudgetUsage } from "@/lib/budget";
@@ -14,10 +13,7 @@ export default async function DashboardPage() {
   }
 
   // Mengambil seluruh transaksi milik user untuk agregasi
-  const allTransactions = await prisma.transaction.findMany({
-    where: { userId: user.id },
-    orderBy: { date: "desc" },
-  });
+  const allTransactions = await findTransactionsByUser(user.id);
 
   // Agregasi F-04: saldo = total income - total expense
   const totalIncome = allTransactions
