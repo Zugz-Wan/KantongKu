@@ -1,0 +1,22 @@
+[
+  {
+    "id": "614c8402-0da0-4d71-a993-beb4632377f1",
+    "userId": "8c08c304-5060-4591-a1cb-92732c76c242",
+    "type": "expense",
+    "amount": 400000,
+    "category": "Kesehatan",
+    "description": null,
+    "date": "2026-09-28T00:00:00.000Z",
+    "createdAt": "2026-09-28T04:39:28.639Z"
+  },
+  {
+    "id": "921690e9-5f0e-4021-bffd-57d9b752ed61",
+    "userId": "8c08c304-5060-4591-a1cb-92732c76c242",
+    "type": "expense",
+    "amount": 500000,
+    "category": "Tagihan / Kost",
+    "description": null,
+    "date": "2026-09-28T00:00:00.000Z",
+    "createdAt": "2026-09-28T04:39:03.225Z"
+  }
+]
