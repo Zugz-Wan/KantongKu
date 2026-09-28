@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/auth/token';
 
 // Route yang membutuhkan autentikasi (F-03)
-const PROTECTED_ROUTES = ['/dashboard', '/transactions'];
+const PROTECTED_ROUTES = ['/dashboard', '/transactions', '/budget'];
 
 // Route untuk autentikasi (jika sudah login, redirect ke dashboard)
 const AUTH_ROUTES = ['/login', '/register'];
