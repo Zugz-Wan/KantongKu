@@ -2,6 +2,8 @@ import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { TransactionList } from "@/components/TransactionList";
+import { calculateBudgetUsage } from "@/lib/budget";
+import { BudgetIndicator } from "@/components/BudgetIndicator";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +32,9 @@ export default async function DashboardPage() {
 
   // Transaksi terbaru (5 transaksi terakhir)
   const recentTransactions = allTransactions.slice(0, 5);
+
+  // FR-BUD-06 & FR-BUD-07: Perhitungan & Indikator Status Penggunaan Anggaran
+  const budgetData = await calculateBudgetUsage(user.id);
 
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -160,6 +165,11 @@ export default async function DashboardPage() {
             {allTransactions.filter((t) => t.type === "expense").length} transaksi pengeluaran
           </div>
         </div>
+      </div>
+
+      {/* FR-BUD-07: Indikator Status Penggunaan Anggaran Bulanan */}
+      <div className="relative z-10">
+        <BudgetIndicator budgetData={budgetData} />
       </div>
 
       {/* Bagian Transaksi Terbaru (F-04: 5 transaksi terakhir) */}
