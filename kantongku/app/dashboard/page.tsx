@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getSession, getCurrentUserId, getCurrentUser } from '@/lib/session';
-import { logoutAction } from '@/app/actions/auth';
+import { LogoutButton } from '@/components/LogoutButton';
 import { 
   Wallet, 
   User, 
@@ -58,17 +58,8 @@ export default async function DashboardPage() {
               <span className="text-[11px] text-slate-400">{session?.email}</span>
             </div>
             
-            {/* Form Logout (F-12) */}
-            <form action={logoutAction}>
-              <button
-                type="submit"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700/60 hover:border-rose-500/30 transition-all cursor-pointer"
-                title="Keluar dari akun"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Logout</span>
-              </button>
-            </form>
+            {/* Tombol Logout (F-12) */}
+            <LogoutButton />
           </div>
         </div>
       </nav>
