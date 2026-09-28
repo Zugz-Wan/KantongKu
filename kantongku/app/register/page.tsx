@@ -181,7 +181,7 @@ export default function RegisterPage() {
               <span>Password di-hash secara aman menggunakan bcrypt.</span>
             </div>
 
-            {/* Tombol Submit */}
+            {/* Tombol Submit */}``
             <div className="pt-2">
               <button
                 type="submit"
