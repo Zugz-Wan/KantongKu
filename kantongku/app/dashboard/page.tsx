@@ -1,10 +1,17 @@
-import Link from "next/link";
-import { getCurrentUser } from "@/lib/session";
-import { TransactionList } from "@/components/TransactionList";
-import { calculateBudgetUsage } from "@/lib/budget";
-import { BudgetIndicator } from "@/components/BudgetIndicator";
-
-export const dynamic = "force-dynamic";
+import Link from 'next/link';
+import { getSession, getCurrentUserId, getCurrentUser } from '@/lib/session';
+import { LogoutButton } from '@/components/LogoutButton';
+import { 
+  Wallet, 
+  User, 
+  Mail, 
+  Key, 
+  LogOut, 
+  ShieldCheck, 
+  ArrowRightLeft, 
+  LayoutDashboard,
+  Code2
+} from 'lucide-react';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -47,6 +54,14 @@ export default async function DashboardPage() {
       {/* Background subtle ambient glow */}
       <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 h-[260px] w-[500px] rounded-full bg-emerald-500/10 blur-[130px]" />
 
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex flex-col text-right">
+              <span className="text-xs font-semibold text-white">{session?.name || 'Mahasiswa'}</span>
+              <span className="text-[11px] text-slate-400">{session?.email}</span>
+            </div>
+            
+            {/* Tombol Logout (F-12) */}
+            <LogoutButton />
       {/* Header Banner (Mengadopsi tipografi & badge dari referensi) */}
       <div className="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-5 border-b border-slate-800/80 pb-6">
         <div>

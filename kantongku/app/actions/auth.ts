@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { hashPassword, verifyPassword } from '@/lib/auth/password';
 import { findUserByEmail, createUser } from '@/lib/db/user-repository';
 import { createSessionToken, setSessionCookie, deleteSessionCookie } from '@/lib/session';
@@ -151,5 +152,6 @@ export async function loginAction(
  */
 export async function logoutAction(): Promise<void> {
   await deleteSessionCookie();
+  revalidatePath('/', 'layout');
   redirect('/login');
 }
