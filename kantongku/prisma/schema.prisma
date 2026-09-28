@@ -15,5 +15,22 @@ model User {
   password  String   // Password yang telah di-hash dengan bcrypt/argon2
   createdAt DateTime @default(now()) @map("created_at")
 
+  transactions Transaction[]
+
   @@map("users")
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  type        String   // "income" atau "expense"
+  amount      Float
+  category    String
+  description String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
 }
