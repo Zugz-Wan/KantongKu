@@ -1,11 +1,17 @@
+"use client";
+
+import { useState } from "react";
 import { BudgetCalculationResult } from "@/lib/budget";
+import { setBudgetAction } from "@/app/actions/budget";
 
 interface BudgetIndicatorProps {
   budgetData: BudgetCalculationResult;
-  onEditClick?: () => void;
 }
 
 export function BudgetIndicator({ budgetData }: BudgetIndicatorProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+
   const {
     hasBudget,
     budgetAmount,
@@ -31,12 +37,23 @@ export function BudgetIndicator({ budgetData }: BudgetIndicatorProps) {
     }).format(val);
   };
 
-  // Clamping progress bar width antara 0% dan 100%
   const progressWidth = Math.min(Math.max(usagePercentage, 0), 100);
+
+  const handleSubmit = async (formData: FormData) => {
+    setIsPending(true);
+    try {
+      await setBudgetAction(formData);
+      setIsEditing(false);
+    } catch (err: any) {
+      alert(err.message || "Gagal menyimpan anggaran.");
+    } finally {
+      setIsPending(false);
+    }
+  };
 
   return (
     <div className="rounded-3xl border border-slate-800 bg-[#070e20]/80 p-6 backdrop-blur-md shadow-xl shadow-emerald-950/10">
-      {/* Header: Judul & Badge Status (FR-BUD-07) */}
+      {/* Header: Judul, Status & Tombol Atur Anggaran (FR-BUD-07 & FR-BUD-08) */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div>
           <div className="flex items-center gap-2">
@@ -52,7 +69,7 @@ export function BudgetIndicator({ budgetData }: BudgetIndicatorProps) {
           </p>
         </div>
 
-        {/* FR-BUD-07: Indikator Status Penggunaan Anggaran */}
+        {/* FR-BUD-07 Status & FR-BUD-08 Atur Anggaran Pribadi */}
         <div className="flex items-center gap-2">
           <span
             className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold shadow-xs ${statusInfo.badgeClass}`}
@@ -63,8 +80,68 @@ export function BudgetIndicator({ budgetData }: BudgetIndicatorProps) {
             {statusInfo.status === "UNSET" && <span>⚪</span>}
             <span>Status: {statusInfo.label}</span>
           </span>
+
+          <button
+            type="button"
+            onClick={() => setIsEditing(!isEditing)}
+            className="inline-flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-1 text-xs font-semibold text-slate-200 hover:border-[#00df82] hover:text-[#00df82] transition"
+          >
+            <span>✏️ {hasBudget ? "Ubah" : "Atur"}</span>
+          </button>
         </div>
       </div>
+
+      {/* Form Dialog / Inline Edit Anggaran (FR-BUD-08: Otorisasi & Akses Mandiri) */}
+      {isEditing && (
+        <form
+          action={handleSubmit}
+          className="mb-5 rounded-2xl border border-emerald-500/30 bg-[#091224] p-4 space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-white">
+              Tentukan Anggaran Bulanan Anda (Bulan {currentMonthName})
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              className="text-xs text-slate-400 hover:text-white"
+            >
+              ✕ Batal
+            </button>
+          </div>
+
+          <input type="hidden" name="month" value={month} />
+          <input type="hidden" name="year" value={year} />
+
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-bold text-slate-500">
+                Rp
+              </span>
+              <input
+                type="number"
+                name="amount"
+                defaultValue={budgetAmount || ""}
+                placeholder="Contoh: 1500000"
+                min="1000"
+                step="1000"
+                required
+                className="w-full rounded-xl border border-slate-700 bg-[#070e20] py-2 pl-9 pr-3 text-sm font-bold text-white placeholder-slate-500 focus:border-[#00df82] focus:outline-none focus:ring-2 focus:ring-[#00df82]/20"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="rounded-xl bg-[#00df82] px-4 py-2 text-xs font-black text-slate-950 hover:bg-[#05f196] disabled:opacity-50 transition"
+            >
+              {isPending ? "Menyimpan..." : "Simpan Anggaran"}
+            </button>
+          </div>
+          <p className="text-[11px] text-slate-500">
+            * Anggaran ini disimpan aman dan hanya dapat diakses oleh akun Anda sendiri.
+          </p>
+        </form>
+      )}
 
       {hasBudget ? (
         <div className="space-y-4">
@@ -122,6 +199,15 @@ export function BudgetIndicator({ budgetData }: BudgetIndicatorProps) {
           <p className="text-xs text-slate-400">
             Anda belum menentukan target anggaran bulanan untuk periode {currentMonthName} {year}.
           </p>
+          {!isEditing && (
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="mt-3 inline-flex items-center gap-1 rounded-xl bg-[#00df82] px-3.5 py-1.5 text-xs font-bold text-slate-950 hover:bg-[#05f196] transition"
+            >
+              <span>+ Atur Anggaran Sekarang</span>
+            </button>
+          )}
         </div>
       )}
     </div>
