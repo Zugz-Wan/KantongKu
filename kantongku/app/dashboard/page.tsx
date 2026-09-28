@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/session";
 import { TransactionList } from "@/components/TransactionList";
-import { findTransactionsByUser } from "@/lib/db/transaction-repository";
+import { calculateBudgetUsage } from "@/lib/budget";
+import { BudgetIndicator } from "@/components/BudgetIndicator";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,9 @@ export default async function DashboardPage() {
 
   // Transaksi terbaru (5 transaksi terakhir)
   const recentTransactions = allTransactions.slice(0, 5);
+
+  // FR-BUD-06 & FR-BUD-07: Perhitungan & Indikator Status Penggunaan Anggaran
+  const budgetData = await calculateBudgetUsage(user.id);
 
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -159,30 +163,9 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Widget Anggaran Bulanan (Quick Budget Overview) */}
-      <div className="relative z-10 rounded-3xl border border-slate-800/80 bg-gradient-to-r from-[#071322] to-[#070e20] p-5 sm:p-6 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-950 border border-emerald-500/20 text-[#00df82] text-lg">
-              🎯
-            </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-white">
-                Kontrol Anggaran & Pagu Pengeluaran Bulanan
-              </h3>
-              <p className="text-xs text-slate-400">
-                Atur pagu pengeluaran bulan ini agar keuanganmu tetap aman terkendali.
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/budget"
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-bold text-slate-200 hover:border-[#00df82] hover:text-[#00df82] transition shrink-0"
-          >
-            <span>Kelola Anggaran</span>
-            <span>&rarr;</span>
-          </Link>
-        </div>
+      {/* FR-BUD-07: Indikator Status Penggunaan Anggaran Bulanan */}
+      <div className="relative z-10">
+        <BudgetIndicator budgetData={budgetData} />
       </div>
 
       {/* Bagian Transaksi Terbaru (F-04: 5 transaksi terakhir) */}

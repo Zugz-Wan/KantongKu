@@ -39,14 +39,14 @@ model Transaction {
 model Budget {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
-  month     String   // Format "YYYY-MM", misal "2026-09"
-  amount    Float    // Nominal anggaran bulanan
-  notes     String?  // Catatan/keterangan opsional
+  amount    Float    // Nilai anggaran bulanan (Rp)
+  month     Int      // Bulan (1 - 12)
+  year      Int      // Tahun (misal 2026)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, month])
+  @@unique([userId, month, year])
   @@map("budgets")
 }
