@@ -16,6 +16,7 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
 
   transactions Transaction[]
+  budgets      Budget[]
 
   @@map("users")
 }
@@ -33,4 +34,19 @@ model Transaction {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("transactions")
+}
+
+model Budget {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  month     String   // Format "YYYY-MM", misal "2026-09"
+  amount    Float    // Nominal anggaran bulanan
+  notes     String?  // Catatan/keterangan opsional
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month])
+  @@map("budgets")
 }

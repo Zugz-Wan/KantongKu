@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { createTransactionRecord } from "@/lib/db/transaction-repository";
 
 /**
  * F-05 Tambah Transaksi:
@@ -37,18 +37,17 @@ export async function createTransaction(formData: FormData) {
 
   const date = dateStr ? new Date(dateStr) : new Date();
 
-  await prisma.transaction.create({
-    data: {
-      userId: user.id,
-      type,
-      amount,
-      category,
-      date,
-      description,
-    },
+  await createTransactionRecord({
+    userId: user.id,
+    type,
+    amount,
+    category,
+    date,
+    description,
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/transactions");
+  revalidatePath("/budget");
   redirect("/transactions");
 }

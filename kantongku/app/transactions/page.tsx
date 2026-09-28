@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { TransactionList } from "@/components/TransactionList";
 import { setDefaultFilterPreference } from "@/app/actions/preference";
+import { findTransactionsByUser } from "@/lib/db/transaction-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -26,21 +26,15 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
   const activeFilter = resolvedSearchParams.filter || defaultFilterFromCookie;
 
   // Filter query transaksi
-  const whereClause: { userId: string; type?: string } = {
-    userId: user.id,
-  };
-  if (activeFilter === "income" || activeFilter === "expense") {
-    whereClause.type = activeFilter;
-  }
+  const allUserTransactions = await findTransactionsByUser(user.id);
+  const allCount = allUserTransactions.length;
+  const incomeCount = allUserTransactions.filter((t) => t.type === "income").length;
+  const expenseCount = allUserTransactions.filter((t) => t.type === "expense").length;
 
-  const transactions = await prisma.transaction.findMany({
-    where: whereClause,
-    orderBy: { date: "desc" },
-  });
-
-  const allCount = await prisma.transaction.count({ where: { userId: user.id } });
-  const incomeCount = await prisma.transaction.count({ where: { userId: user.id, type: "income" } });
-  const expenseCount = await prisma.transaction.count({ where: { userId: user.id, type: "expense" } });
+  const transactions =
+    activeFilter === "all"
+      ? allUserTransactions
+      : allUserTransactions.filter((t) => t.type === activeFilter);
 
   return (
     <div className="space-y-6">
