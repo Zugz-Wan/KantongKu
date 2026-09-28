@@ -3,16 +3,36 @@ import { PrismaClient } from "@prisma/client";
 
 const prismaClientSingleton = () => {
   const connectionString = process.env.DATABASE_URL;
-  const adapter = new PrismaPg({ connectionString });
-  return new PrismaClient({ adapter });
+  if (!connectionString || connectionString.trim().length === 0) {
+    return null;
+  }
+  try {
+    const adapter = new PrismaPg({ connectionString });
+    return new PrismaClient({ adapter });
+  } catch (err) {
+    console.warn("Gagal menginisialisasi PrismaClient:", err);
+    return null;
+  }
 };
 
 declare const globalThis: {
-  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
+  prismaGlobal: PrismaClient | null | undefined;
 } & typeof global;
 
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+const prisma = globalThis.prismaGlobal !== undefined ? globalThis.prismaGlobal : prismaClientSingleton();
 
-export default prisma;
+if (process.env.NODE_ENV !== "production") {
+  globalThis.prismaGlobal = prisma;
+}
 
-if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma;
+/**
+ * Ekspor named helper untuk kompatibilitas dengan user-repository.ts (Programmer 1)
+ */
+export function getPrismaClient(): PrismaClient | null {
+  return prisma;
+}
+
+/**
+ * Ekspor default untuk kompatibilitas dengan modul Programmer 2 & transaksi
+ */
+export default prisma as PrismaClient;
