@@ -1,115 +1,157 @@
-import Link from 'next/link';
-import { getSession } from '@/lib/session';
-import { logoutAction } from '@/app/actions/auth';
-import { 
-  Wallet, 
-  LogOut, 
-  ArrowRightLeft, 
-  LayoutDashboard, 
-  ShieldCheck,
-  PlusCircle,
-  Receipt
-} from 'lucide-react';
+import Link from "next/link";
+import { cookies } from "next/headers";
+import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
+import { TransactionList } from "@/components/TransactionList";
+import { setDefaultFilterPreference } from "@/app/actions/preference";
 
-export default async function TransactionsPage() {
-  const session = await getSession();
+export const dynamic = "force-dynamic";
+
+interface TransactionsPageProps {
+  searchParams: Promise<{ filter?: string }>;
+}
+
+export default async function TransactionsPage({ searchParams }: TransactionsPageProps) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return <div>Memuat data pengguna...</div>;
+  }
+
+  // F-10 Cookies Preferensi: Membaca filter default via next/headers
+  const cookieStore = await cookies();
+  const defaultFilterFromCookie = cookieStore.get("default_filter")?.value || "all";
+
+  // Parameter URL memiliki prioritas jika pengguna sedang mengklik filter tertentu
+  const resolvedSearchParams = await searchParams;
+  const activeFilter = resolvedSearchParams.filter || defaultFilterFromCookie;
+
+  // Filter query transaksi
+  const whereClause: { userId: string; type?: string } = {
+    userId: user.id,
+  };
+  if (activeFilter === "income" || activeFilter === "expense") {
+    whereClause.type = activeFilter;
+  }
+
+  const transactions = await prisma.transaction.findMany({
+    where: whereClause,
+    orderBy: { date: "desc" },
+  });
+
+  const allCount = await prisma.transaction.count({ where: { userId: user.id } });
+  const incomeCount = await prisma.transaction.count({ where: { userId: user.id, type: "income" } });
+  const expenseCount = await prisma.transaction.count({ where: { userId: user.id, type: "expense" } });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Navbar */}
-      <nav className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="flex items-center gap-2.5">
-              <div className="p-2 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl text-slate-950">
-                <Wallet className="w-5 h-5 stroke-[2.5]" />
-              </div>
-              <span className="font-bold text-lg text-white">
-                Kantong<span className="text-emerald-400">Ku</span>
-              </span>
-            </Link>
+    <div className="space-y-6">
+      {/* Header Halaman */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            Riwayat Transaksi
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Daftar lengkap seluruh histori pengeluaran dan pemasukan Anda
+          </p>
+        </div>
 
-            <div className="hidden sm:flex items-center gap-1">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
-              >
-                <LayoutDashboard className="w-3.5 h-3.5" />
-                Dashboard
-              </Link>
-              <Link
-                href="/transactions"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-              >
-                <ArrowRightLeft className="w-3.5 h-3.5" />
-                Transaksi
-              </Link>
-            </div>
-          </div>
+        <Link
+          href="/transactions/new"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#00df82] px-5 py-2.5 text-sm font-extrabold text-slate-950 shadow-md shadow-[#00df82]/20 hover:bg-[#05f196] hover:scale-105 active:scale-98 transition"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Catat Transaksi</span>
+        </Link>
+      </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex flex-col text-right">
-              <span className="text-xs font-semibold text-white">{session?.name || 'Mahasiswa'}</span>
-              <span className="text-[11px] text-slate-400">{session?.email}</span>
-            </div>
-            
-            {/* Form Logout (F-12) */}
-            <form action={logoutAction}>
+      {/* Filter Tabs & Preferensi Default (F-10) */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-slate-800 bg-[#070e20]/80 p-2.5 shadow-2xs">
+        {/* Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          <Link
+            href="/transactions?filter=all"
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              activeFilter === "all"
+                ? "bg-[#00df82] text-slate-950 shadow-xs"
+                : "text-slate-300 hover:bg-slate-800/80"
+            }`}
+          >
+            <span>Semua</span>
+            <span className={`rounded-md px-1.5 py-0.2 text-[10px] ${
+              activeFilter === "all" ? "bg-slate-950/20 text-slate-950" : "bg-slate-800 text-slate-300"
+            }`}>
+              {allCount}
+            </span>
+          </Link>
+
+          <Link
+            href="/transactions?filter=income"
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              activeFilter === "income"
+                ? "bg-[#00df82] text-slate-950 shadow-xs"
+                : "text-slate-300 hover:bg-slate-800/80"
+            }`}
+          >
+            <span>💰 Pemasukan</span>
+            <span className={`rounded-md px-1.5 py-0.2 text-[10px] ${
+              activeFilter === "income" ? "bg-slate-950/20 text-slate-950" : "bg-slate-800 text-slate-300"
+            }`}>
+              {incomeCount}
+            </span>
+          </Link>
+
+          <Link
+            href="/transactions?filter=expense"
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              activeFilter === "expense"
+                ? "bg-rose-500 text-white shadow-xs"
+                : "text-slate-300 hover:bg-slate-800/80"
+            }`}
+          >
+            <span>💸 Pengeluaran</span>
+            <span className={`rounded-md px-1.5 py-0.2 text-[10px] ${
+              activeFilter === "expense" ? "bg-white/20" : "bg-slate-800 text-slate-300"
+            }`}>
+              {expenseCount}
+            </span>
+          </Link>
+        </div>
+
+        {/* F-10: Simpan Filter ini sebagai Cookie Preferensi Default */}
+        <div className="flex items-center justify-between sm:justify-end gap-2 text-xs text-slate-400 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800">
+          <span className="text-[11px]">
+            Default cookie: <strong className="text-white uppercase">{defaultFilterFromCookie}</strong>
+          </span>
+
+          {activeFilter !== defaultFilterFromCookie && (
+            <form
+              action={async () => {
+                "use server";
+                await setDefaultFilterPreference(activeFilter);
+              }}
+            >
               <button
                 type="submit"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700/60 hover:border-rose-500/30 transition-all cursor-pointer"
-                title="Keluar dari akun"
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-[11px] font-bold text-slate-200 hover:border-[#00df82] hover:text-[#00df82] transition shadow-2xs"
               >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Logout</span>
+                <span>⭐ Jadikan Default</span>
               </button>
             </form>
-          </div>
+          )}
         </div>
-      </nav>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-2">
-              <ShieldCheck className="w-3.5 h-3.5" /> Route Terproteksi: /transactions
-            </div>
-            <h1 className="text-2xl font-bold text-white">Daftar Transaksi</h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Halaman ini juga diproteksi oleh <code className="text-emerald-400 font-mono">middleware.ts</code> (F-03).
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 font-semibold rounded-xl text-xs shadow-lg shadow-emerald-500/20 hover:opacity-95 transition-opacity"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Tambah Transaksi Baru</span>
-          </button>
-        </div>
-
-        {/* Placeholder / Empty State for Programmer 2 / 3 */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-12 text-center">
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400 mb-3">
-            <Receipt className="w-6 h-6" />
-          </div>
-          <h3 className="text-base font-semibold text-white">Belum Ada Transaksi</h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-            Modul transaksi ini siap dikembangkan oleh Programmer tim dengan memanfaatkan sesi user yang sudah aktif.
-          </p>
-          <div className="mt-6">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              <span>Kembali ke Dashboard</span>
-            </Link>
-          </div>
-        </div>
-      </main>
+      {/* Tabel Riwayat Transaksi */}
+      <TransactionList
+        transactions={transactions}
+        emptyMessage={
+          activeFilter === "all"
+            ? "Belum ada catatan riwayat transaksi."
+            : `Tidak ditemukan transaksi dengan tipe ${activeFilter === "income" ? "pemasukan" : "pengeluaran"}.`
+        }
+      />
     </div>
   );
 }
