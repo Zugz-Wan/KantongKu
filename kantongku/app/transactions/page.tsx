@@ -1,15 +1,3 @@
-import Link from 'next/link';
-import { getSession } from '@/lib/session';
-import { LogoutButton } from '@/components/LogoutButton';
-import { 
-  Wallet, 
-  LogOut, 
-  ArrowRightLeft, 
-  LayoutDashboard, 
-  ShieldCheck,
-  PlusCircle,
-  Receipt
-} from 'lucide-react';
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/session";
@@ -26,18 +14,9 @@ interface TransactionsPageProps {
 export default async function TransactionsPage({ searchParams }: TransactionsPageProps) {
   const user = await getCurrentUser();
   if (!user) {
-    return <div>Memuat data pengguna...</div>;
+    return <div className="text-center py-12 text-slate-400">Memuat data pengguna...</div>;
   }
 
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex flex-col text-right">
-              <span className="text-xs font-semibold text-white">{session?.name || 'Mahasiswa'}</span>
-              <span className="text-[11px] text-slate-400">{session?.email}</span>
-            </div>
-            
-            {/* Tombol Logout (F-12) */}
-            <LogoutButton />
-          </div>
   // F-10 Cookies Preferensi: Membaca filter default via next/headers
   const cookieStore = await cookies();
   const defaultFilterFromCookie = cookieStore.get("default_filter")?.value || "all";

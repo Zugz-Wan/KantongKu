@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { toggleThemePreference } from "@/app/actions/preference";
+import { LogoutButton } from "@/components/LogoutButton";
 
 interface NavbarProps {
   userName?: string;
@@ -105,18 +106,8 @@ export async function Navbar({ userName }: NavbarProps) {
             </div>
           )}
 
-          {/* Tombol Logout (Deliverable: tombol logout disiapkan untuk integrasi Programmer 1) */}
-          <form action="/login">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-rose-900/40 bg-rose-950/20 px-3 py-1.5 text-xs font-bold text-rose-400 hover:bg-rose-900/40 transition"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span>Logout</span>
-            </button>
-          </form>
+          {/* Tombol Logout (F-12) */}
+          <LogoutButton />
         </div>
       </div>
     </header>

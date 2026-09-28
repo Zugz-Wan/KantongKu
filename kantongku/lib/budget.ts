@@ -1,4 +1,5 @@
-import prisma from "@/lib/prisma";
+import { findBudgetByMonth } from "@/lib/db/budget-repository";
+import { findTransactionsByUser } from "@/lib/db/transaction-repository";
 
 export type BudgetStatusType = "SAFE" | "WARNING" | "DANGER" | "UNSET";
 
@@ -88,37 +89,25 @@ export async function calculateBudgetUsage(
   const month = targetMonth !== undefined ? targetMonth : now.getMonth() + 1; // 1 - 12
   const year = targetYear !== undefined ? targetYear : now.getFullYear();
 
+  // Format "YYYY-MM" (misal: "2026-09")
+  const monthStr = `${year}-${String(month).padStart(2, "0")}`;
+
   // Rentang waktu bulan yang dihitung
   const startDate = new Date(year, month - 1, 1, 0, 0, 0);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
   // 1. Ambil data anggaran bulanan untuk user pada bulan & tahun ini
-  const budgetRecord = await prisma.budget.findUnique({
-    where: {
-      userId_month_year: {
-        userId,
-        month,
-        year,
-      },
-    },
-  });
+  const budgetRecord = await findBudgetByMonth(userId, monthStr);
 
   const budgetAmount = budgetRecord?.amount || 0;
   const hasBudget = budgetAmount > 0;
 
   // 2. Ambil total seluruh transaksi pengeluaran (expense) pada bulan ini
-  const monthlyExpenses = await prisma.transaction.findMany({
-    where: {
-      userId,
-      type: "expense",
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    select: {
-      amount: true,
-    },
+  const allUserTransactions = await findTransactionsByUser(userId);
+  const monthlyExpenses = allUserTransactions.filter((t) => {
+    if (t.type !== "expense") return false;
+    const txDate = new Date(t.date);
+    return txDate >= startDate && txDate <= endDate;
   });
 
   const totalExpense = monthlyExpenses.reduce((sum, item) => sum + item.amount, 0);
